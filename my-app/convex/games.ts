@@ -92,6 +92,22 @@ export const joinRoom = mutation({
       throw new Error("Game has already started");
     }
 
+    // Check current player count in the room
+    const currentPlayers = await ctx.db
+      .query("players")
+      .withIndex("by_roomId", (q) => q.eq("roomId", room._id))
+      .collect();
+
+    // Check if player is already in this room
+    const existingPlayer = currentPlayers.find(
+      (p) => p.playerId === args.playerToken
+    );
+
+    // If player is not in the room and room is full, reject
+    if (!existingPlayer && currentPlayers.length >= 6) {
+      throw new Error("Room is full (maximum 6 players)");
+    }
+
     // Ensure player exists
     const player = await ctx.db
       .query("players")

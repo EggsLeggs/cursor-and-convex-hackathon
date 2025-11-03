@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getPlayerToken } from "../utils/storage";
@@ -44,6 +44,16 @@ export default function GameScreen({ roomId, onLeaveGame }: GameScreenProps) {
     }
   }, [gameState, playerToken]);
 
+  const handleJudgeRound = useCallback(async () => {
+    try {
+      setJudgingInProgress(true);
+      await judgeRound({ roomId: roomId as any });
+    } catch (err: any) {
+      alert(err.message || "Failed to judge round");
+      setJudgingInProgress(false);
+    }
+  }, [judgeRound, roomId]);
+
   // Monitor game state changes
   useEffect(() => {
     if (gameState) {
@@ -64,7 +74,23 @@ export default function GameScreen({ roomId, onLeaveGame }: GameScreenProps) {
         setPrompt("");
       }
     }
-  }, [gameState?.status]);
+  }, [gameState?.status, handleJudgeRound]);
+
+  // Auto-trigger judging when all players submit
+  useEffect(() => {
+    if (
+      gameState &&
+      gameState.status === "prompt" &&
+      room &&
+      gameState.submissions.length === room.players.length &&
+      room.players.length > 0 &&
+      playerToken === room.hostId &&
+      !judgingInProgress
+    ) {
+      // All players have submitted, automatically start judging
+      handleJudgeRound();
+    }
+  }, [gameState, room, playerToken, judgingInProgress, handleJudgeRound]);
 
   const handleSubmitPrompt = async () => {
     if (!prompt.trim()) {
@@ -81,16 +107,6 @@ export default function GameScreen({ roomId, onLeaveGame }: GameScreenProps) {
       setHasSubmitted(true);
     } catch (err: any) {
       alert(err.message || "Failed to submit prompt");
-    }
-  };
-
-  const handleJudgeRound = async () => {
-    try {
-      setJudgingInProgress(true);
-      await judgeRound({ roomId: roomId as any });
-    } catch (err: any) {
-      alert(err.message || "Failed to judge round");
-      setJudgingInProgress(false);
     }
   };
 
@@ -322,23 +338,25 @@ export default function GameScreen({ roomId, onLeaveGame }: GameScreenProps) {
           {hasSubmitted && (
             <p style={{ marginTop: "0.5rem", color: "var(--waiting-text-secondary, #666)" }}>
               Waiting for other players to submit...
-              {allSubmitted && isHost && (
-                <button
-                  onClick={handleJudgeRound}
-                  style={{
-                    marginLeft: "1rem",
-                    padding: "0.5rem 1rem",
-                    backgroundColor: "#ff9800",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                  }}
-                >
-                  Start Judging
-                </button>
-              )}
             </p>
+          )}
+          {isHost && gameState.status === "prompt" && (
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={handleJudgeRound}
+                disabled={judgingInProgress || gameState.submissions.length === 0}
+                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded transition-colors"
+              >
+                {judgingInProgress 
+                  ? "Judging..." 
+                  : gameState.submissions.length === 0
+                    ? "Wait for submissions"
+                    : allSubmitted
+                      ? "Start Judging (All submitted)"
+                      : `End Round Early (${gameState.submissions.length}/${room.players.length} submitted)`
+                }
+              </button>
+            </div>
           )}
         </div>
       )}

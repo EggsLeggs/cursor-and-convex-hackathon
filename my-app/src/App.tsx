@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { getPlayerToken } from "./utils/storage";
@@ -20,27 +20,43 @@ function App() {
     }
   }, []);
 
-  const handleRoomCreated = (newRoomId: string) => {
+  const handleRoomCreated = useCallback((newRoomId: string) => {
     setRoomId(newRoomId as Id<"rooms">);
     // Stay in lobby - no need to navigate to waiting room
-  };
+  }, []);
 
-  const handleRoomJoined = (newRoomId: string) => {
-    setRoomId(newRoomId as Id<"rooms">);
+  const handleRoomJoined = useCallback((newRoomId: string) => {
+    setRoomId((currentRoomId) => {
+      // Only update if different to prevent loops
+      if (currentRoomId !== newRoomId) {
+        return newRoomId as Id<"rooms">;
+      }
+      return currentRoomId;
+    });
     // Stay in lobby - no need to navigate to waiting room
-  };
+  }, []);
 
-  const handleGameStart = (gameRoomId?: string) => {
+  const handleGameStart = useCallback((gameRoomId?: string) => {
     if (gameRoomId) {
-      setRoomId(gameRoomId as Id<"rooms">);
+      setRoomId((currentRoomId) => {
+        if (currentRoomId !== gameRoomId) {
+          return gameRoomId as Id<"rooms">;
+        }
+        return currentRoomId;
+      });
     }
-    setScreen("game");
-  };
+    setScreen((currentScreen) => {
+      if (currentScreen !== "game") {
+        return "game";
+      }
+      return currentScreen;
+    });
+  }, []);
 
-  const handleLeaveGame = () => {
+  const handleLeaveGame = useCallback(() => {
     setRoomId("");
     setScreen("lobby");
-  };
+  }, []);
 
   // Check if player is already in a room when loading
   const playerToken = getPlayerToken();
@@ -51,14 +67,24 @@ function App() {
 
   // Set roomId if player is already in a room
   useEffect(() => {
-    if (playerRoom && !roomId) {
-      setRoomId(playerRoom._id);
-      // If game has already started, redirect to game screen
-      if (playerRoom.status === "playing" || playerRoom.status === "finished") {
-        setScreen("game");
+    if (playerRoom) {
+      const roomIdStr = playerRoom._id as string;
+      if (!roomId || roomId !== roomIdStr) {
+        setRoomId(roomIdStr as Id<"rooms">);
+        // If game has already started, redirect to game screen
+        if (playerRoom.status === "playing" || playerRoom.status === "finished") {
+          setScreen("game");
+        }
+      }
+    } else if (!playerRoom && roomId) {
+      // Player was kicked or removed from room - reset to lobby
+      setRoomId("");
+      if (screen !== "lobby") {
+        setScreen("lobby");
       }
     }
-  }, [playerRoom, roomId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playerRoom?._id, playerRoom?.status]);
 
   // Monitor room status to auto-advance screens
    
@@ -72,18 +98,45 @@ function App() {
       if (room.status === "playing" && screen === "lobby") {
         setScreen("game");
       }
+      // Check if current player is still in the room
+      const playerToken = getPlayerToken();
+      if (playerToken && !room.players.find(p => p.playerId === playerToken)) {
+        // Player was kicked from the room
+        setRoomId("");
+        setScreen("lobby");
+      }
+    } else if (roomId && !room) {
+      // Room was deleted or player was removed
+      setRoomId("");
+      setScreen("lobby");
     }
-  }, [room, screen]);
+  }, [room, screen, roomId]);
 
-  if (screen === "lobby") {
-    return <Lobby onRoomCreated={handleRoomCreated} onRoomJoined={handleRoomJoined} onGameStart={handleGameStart} />;
-  }
-
-  if (screen === "game" && roomId) {
-    return <GameScreen roomId={roomId} onLeaveGame={handleLeaveGame} />;
-  }
-
-  return <div>Loading...</div>;
+  return (
+    <div className="min-h-screen flex flex-col">
+      <div className="flex-1">
+        {screen === "lobby" ? (
+          <Lobby onRoomCreated={handleRoomCreated} onRoomJoined={handleRoomJoined} onGameStart={handleGameStart} />
+        ) : screen === "game" && roomId ? (
+          <GameScreen roomId={roomId} onLeaveGame={handleLeaveGame} />
+        ) : (
+          <div>Loading...</div>
+        )}
+      </div>
+      <footer className="w-full py-4 px-4 border-t border-border bg-background">
+        <div className="max-w-7xl mx-auto flex justify-center items-center gap-2">
+          <span className="text-sm text-muted-foreground">Powered by</span>
+          <div className="bg-slate-900 dark:bg-slate-800 px-4 py-2 rounded-lg shadow-md border border-slate-700 dark:border-slate-600">
+            <img 
+              src="/convex_dark.svg" 
+              alt="Convex" 
+              className="h-6 opacity-90 hover:opacity-100 transition-opacity"
+            />
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
 }
 
 export default App
