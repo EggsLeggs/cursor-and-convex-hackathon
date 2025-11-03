@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { getPlayerToken } from "./utils/storage";
@@ -44,6 +44,8 @@ function App() {
         }
         return currentRoomId;
       });
+      // Set redirect key to prevent App's useEffect from also redirecting
+      hasRedirectedRef.current = `${gameRoomId}-playing`;
     }
     setScreen((currentScreen) => {
       if (currentScreen !== "game") {
@@ -87,30 +89,43 @@ function App() {
   }, [playerRoom?._id, playerRoom?.status]);
 
   // Monitor room status to auto-advance screens
-   
   const room = useQuery(
     api.games.getRoom,
     roomId ? { roomId } : "skip"
   );
 
+  const hasRedirectedRef = useRef<string>("");
+  
   useEffect(() => {
     if (room) {
+      // Auto-redirect to game when status changes to playing (only once per status)
       if (room.status === "playing" && screen === "lobby") {
-        setScreen("game");
+        const redirectKey = `${room._id}-${room.status}`;
+        if (hasRedirectedRef.current !== redirectKey) {
+          hasRedirectedRef.current = redirectKey;
+          setScreen("game");
+        }
+      }
+      // Reset redirect flag when status changes back
+      if (room.status === "waiting") {
+        hasRedirectedRef.current = "";
       }
       // Check if current player is still in the room
-      const playerToken = getPlayerToken();
-      if (playerToken && !room.players.find(p => p.playerId === playerToken)) {
+      const currentToken = getPlayerToken();
+      if (currentToken && !room.players.find(p => p.playerId === currentToken)) {
         // Player was kicked from the room
         setRoomId("");
         setScreen("lobby");
+        hasRedirectedRef.current = "";
       }
     } else if (roomId && !room) {
       // Room was deleted or player was removed
       setRoomId("");
       setScreen("lobby");
+      hasRedirectedRef.current = "";
     }
-  }, [room, screen, roomId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room?.status, room?.players.length]);
 
   return (
     <div className="min-h-screen flex flex-col">
