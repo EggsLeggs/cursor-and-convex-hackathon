@@ -153,6 +153,32 @@ export default function GameScreen({ roomId, onLeaveGame }: GameScreenProps) {
     }
   }, [room, playerToken, currentPlayer, onLeaveGame]);
 
+  const renderOutcome = (text: string) => {
+    const numberedMatches = Array.from(
+      text.matchAll(/(?:^|\n)\s*(\d+)\.\s*([\s\S]*?)(?=(?:\n\s*\d+\.\s)|$)/g)
+    );
+    if (numberedMatches.length >= 2) {
+      return (
+        <ol className="list-decimal ml-6 my-2 text-foreground">
+          {numberedMatches.map((m, i) => (
+            <li key={i} className="mb-1">{m[2].trim()}</li>
+          ))}
+        </ol>
+      );
+    }
+    const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+    if (lines.length > 1) {
+      return (
+        <ul className="list-disc ml-6 my-2 text-foreground">
+          {lines.map((l, i) => (
+            <li key={i} className="mb-1">{l}</li>
+          ))}
+        </ul>
+      );
+    }
+    return <p className="my-2 text-foreground">{text}</p>;
+  };
+
   if (!gameState || !room) {
     return <div>Loading game...</div>;
   }
@@ -419,7 +445,7 @@ export default function GameScreen({ roomId, onLeaveGame }: GameScreenProps) {
                   {submission.outcome && (
                     <div>
                       <strong className="text-foreground">Outcome:</strong>
-                      <p className="my-2 text-foreground">{submission.outcome}</p>
+                      {renderOutcome(submission.outcome)}
                     </div>
                   )}
                 </div>
