@@ -11,6 +11,31 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Dark mode colors */
+  --code-bg: #2a2a2a;
+  --code-text: rgba(255, 255, 255, 0.7);
+  --player-card-bg: #1a1a1a;
+  --player-card-border: #444;
+  --player-name-color: rgba(255, 255, 255, 0.87);
+  --waiting-bg: #1e3a4a;
+  --waiting-text: rgba(255, 255, 255, 0.87);
+  --waiting-text-secondary: rgba(255, 255, 255, 0.7);
+  --scenario-bg: #2a2a2a;
+  --scenario-title-color: rgba(255, 255, 255, 0.87);
+  --scenario-text-color: rgba(255, 255, 255, 0.87);
+  --judging-bg: #1e3a4a;
+  --judging-text: rgba(255, 255, 255, 0.87);
+  --result-winner-bg: #1b5e20;
+  --result-loser-bg: #4a1e1e;
+  --result-winner-border: #4caf50;
+  --result-loser-border: #f44336;
+  --result-text: rgba(255, 255, 255, 0.87);
+  --scoreboard-leader-bg: #3d2f1a;
+  --scoreboard-player-bg: #1a1a1a;
+  --scoreboard-border: #444;
+  --scoreboard-text: rgba(255, 255, 255, 0.87);
+  --scoreboard-you-text: rgba(255, 255, 255, 0.7);
 }
 
 a {
@@ -58,6 +83,31 @@ button:focus-visible {
   :root {
     color: #213547;
     background-color: #ffffff;
+
+    /* Light mode colors */
+    --code-bg: #f0f0f0;
+    --code-text: #666;
+    --player-card-bg: #fff;
+    --player-card-border: #ddd;
+    --player-name-color: inherit;
+    --waiting-bg: #e8f4f8;
+    --waiting-text: inherit;
+    --waiting-text-secondary: #666;
+    --scenario-bg: #f0f0f0;
+    --scenario-title-color: inherit;
+    --scenario-text-color: inherit;
+    --judging-bg: #e8f4f8;
+    --judging-text: inherit;
+    --result-winner-bg: #e8f5e9;
+    --result-loser-bg: #ffebee;
+    --result-winner-border: #4caf50;
+    --result-loser-border: #f44336;
+    --result-text: inherit;
+    --scoreboard-leader-bg: #fff9e6;
+    --scoreboard-player-bg: #fff;
+    --scoreboard-border: #ddd;
+    --scoreboard-text: inherit;
+    --scoreboard-you-text: #666;
   }
   a:hover {
     color: #747bff;

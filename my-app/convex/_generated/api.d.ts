@@ -8,6 +8,10 @@
  * @module
  */
 
+import type * as games from "../games.js";
+import type * as openai from "../openai.js";
+import type * as players from "../players.js";
+import type * as scenarios from "../scenarios.js";
 import type * as tasks from "../tasks.js";
 
 import type {
@@ -25,6 +29,10 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  games: typeof games;
+  openai: typeof openai;
+  players: typeof players;
+  scenarios: typeof scenarios;
   tasks: typeof tasks;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
