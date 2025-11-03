@@ -123,6 +123,77 @@ export const joinRoom = mutation({
   },
 });
 
+export const kickPlayer = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    hostToken: v.string(),
+    playerIdToKick: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const room = await ctx.db.get(args.roomId);
+    if (!room) {
+      throw new Error("Room not found");
+    }
+
+    // Verify host permissions
+    if (room.hostId !== args.hostToken) {
+      throw new Error("Only the host can kick players");
+    }
+
+    if (room.status !== "waiting") {
+      throw new Error("Cannot kick players after game has started");
+    }
+
+    // Cannot kick the host
+    if (room.hostId === args.playerIdToKick) {
+      throw new Error("Cannot kick the host");
+    }
+
+    // Find and remove the player
+    const player = await ctx.db
+      .query("players")
+      .withIndex("by_playerId", (q) => q.eq("playerId", args.playerIdToKick))
+      .first();
+
+    if (player && player.roomId === args.roomId) {
+      await ctx.db.patch(player._id, {
+        roomId: null,
+        score: 0,
+      });
+    }
+  },
+});
+
+export const leaveRoom = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    playerToken: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const room = await ctx.db.get(args.roomId);
+    if (!room) {
+      throw new Error("Room not found");
+    }
+
+    // Find and remove the player
+    const player = await ctx.db
+      .query("players")
+      .withIndex("by_playerId", (q) => q.eq("playerId", args.playerToken))
+      .first();
+
+    if (player && player.roomId === args.roomId) {
+      await ctx.db.patch(player._id, {
+        roomId: null,
+        score: 0,
+      });
+    }
+
+    // If the host leaves, we could optionally delete the room or transfer host
+    // For now, just remove the player
+    // Note: Players can leave at any time, even during active games
+  },
+});
+
 export const getRoom = query({
   args: { roomId: v.id("rooms") },
   handler: async (ctx, args) => {

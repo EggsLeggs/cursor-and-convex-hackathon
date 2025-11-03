@@ -46,6 +46,39 @@ export const getPlayerByToken = query({
   },
 });
 
+export const getPlayerRoom = query({
+  args: { playerToken: v.string() },
+  handler: async (ctx, args) => {
+    const player = await ctx.db
+      .query("players")
+      .withIndex("by_playerId", (q) => q.eq("playerId", args.playerToken))
+      .first();
+
+    if (!player || !player.roomId) {
+      return null;
+    }
+
+    const room = await ctx.db.get(player.roomId);
+    if (!room) {
+      return null;
+    }
+
+    const players = await ctx.db
+      .query("players")
+      .withIndex("by_roomId", (q) => q.eq("roomId", player.roomId))
+      .collect();
+
+    return {
+      ...room,
+      players: players.map((p) => ({
+        playerId: p.playerId,
+        name: p.name,
+        score: p.score,
+      })),
+    };
+  },
+});
+
 export const setPlayerName = mutation({
   args: {
     playerToken: v.string(),
