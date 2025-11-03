@@ -173,7 +173,7 @@ export default function GameScreen({ roomId, onLeaveGame }: GameScreenProps) {
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = "var(--destructive, #ef4444)";
-              e.currentTarget.style.color = "white";
+              e.currentTarget.style.color = "var(--destructive-foreground, #ffffff)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = "transparent";
@@ -184,46 +184,31 @@ export default function GameScreen({ roomId, onLeaveGame }: GameScreenProps) {
             Leave Game
           </button>
         </div>
-        <h2>Final Scoreboard</h2>
-        <div style={{ marginBottom: "2rem" }}>
+        <h2 className="text-foreground mb-4">Final Scoreboard</h2>
+        <div className="mb-8 space-y-2">
           {scoreboard?.map((player, idx) => (
             <div
               key={player.playerId}
-              style={{
-                padding: "1rem",
-                backgroundColor: idx === 0 
-                  ? "var(--scoreboard-leader-bg, #fff9e6)" 
-                  : "var(--scoreboard-player-bg, #fff)",
-                borderRadius: "4px",
-                border: "1px solid var(--scoreboard-border, #ddd)",
-                marginBottom: "0.5rem",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                color: "var(--scoreboard-text, inherit)",
-              }}
+              className={`p-4 rounded border flex justify-between items-center ${
+                idx === 0 
+                  ? "bg-primary/10 border-primary/30" 
+                  : "bg-card border-border"
+              }`}
             >
-              <div>
-                <span style={{ fontSize: "1.5rem", marginRight: "1rem" }}>
+              <div className="flex items-center">
+                <span className="text-2xl mr-4 text-foreground">
                   #{idx + 1}
                 </span>
-                <span style={{ fontSize: "1.2rem", fontWeight: "bold" }}>
+                <span className="text-xl font-bold text-foreground">
                   {player.name}
                 </span>
                 {idx === 0 && (
-                  <span
-                    style={{
-                      marginLeft: "1rem",
-                      fontSize: "0.9rem",
-                      color: "#ffa500",
-                      fontWeight: "bold",
-                    }}
-                  >
+                  <span className="ml-4 text-sm text-primary font-bold">
                     🏆 WINNER
                   </span>
                 )}
               </div>
-              <span style={{ fontSize: "1.2rem", fontWeight: "bold" }}>
+              <span className="text-xl font-bold text-foreground">
                 {player.score} / {room.maxRounds}
               </span>
             </div>
@@ -267,7 +252,7 @@ export default function GameScreen({ roomId, onLeaveGame }: GameScreenProps) {
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = "var(--destructive, #ef4444)";
-              e.currentTarget.style.color = "white";
+              e.currentTarget.style.color = "var(--destructive-foreground, #ffffff)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = "transparent";
@@ -359,24 +344,16 @@ export default function GameScreen({ roomId, onLeaveGame }: GameScreenProps) {
       )}
 
       {(gameState.status === "judging" || judgingInProgress) && (
-        <div
-          style={{
-            padding: "2rem",
-            backgroundColor: "var(--judging-bg, #e8f4f8)",
-            borderRadius: "8px",
-            textAlign: "center",
-            color: "var(--judging-text, inherit)",
-          }}
-        >
-          <h2>Judging in progress...</h2>
-          <p>AI is evaluating all submissions. This may take a moment.</p>
+        <div className="p-8 bg-muted rounded-lg text-center">
+          <h2 className="text-foreground mb-2">Judging in progress...</h2>
+          <p className="text-muted-foreground">AI is evaluating all submissions. This may take a moment.</p>
         </div>
       )}
 
       {showResults && gameState.status === "results" && (
-        <div style={{ marginBottom: "2rem" }}>
-          <h2>Round Results</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div className="mb-8">
+          <h2 className="text-foreground mb-4">Round Results</h2>
+          <div className="flex flex-col gap-4">
             {gameState.submissions
               .sort((a, b) => {
                 // Sort by winner first, then by submission time
@@ -387,91 +364,74 @@ export default function GameScreen({ roomId, onLeaveGame }: GameScreenProps) {
               .map((submission) => (
                 <div
                   key={submission._id}
-                  style={{
-                    padding: "1.5rem",
-                    backgroundColor: submission.isWinner 
-                      ? "var(--result-winner-bg, #e8f5e9)" 
-                      : "var(--result-loser-bg, #ffebee)",
-                    borderRadius: "8px",
-                    border: `2px solid ${
-                      submission.isWinner 
-                        ? "var(--result-winner-border, #4caf50)" 
-                        : "var(--result-loser-border, #f44336)"
-                    }`,
-                    color: "var(--result-text, inherit)",
-                  }}
+                  className={`p-6 rounded-lg border-2 ${
+                    submission.isWinner 
+                      ? "bg-green-500/10 dark:bg-green-900/30 border-green-500 dark:border-green-700" 
+                      : "bg-red-500/10 dark:bg-red-900/30 border-red-500 dark:border-red-700"
+                  }`}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: "1rem",
-                    }}
-                  >
-                    <h3 style={{ margin: 0 }}>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="m-0 text-foreground font-semibold">
                       {submission.playerName}
                       {submission.playerId === playerToken && " (You)"}
                     </h3>
-                    <span
-                      style={{
-                        padding: "0.5rem 1rem",
-                        borderRadius: "4px",
-                        backgroundColor: submission.isWinner ? "#4caf50" : "#f44336",
-                        color: "white",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      {submission.isWinner ? "✓ WINNER" : "✗ LOST"}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={submission.isWinner ? "/robot_pass.png" : "/robot_fail.png"}
+                        alt={submission.isWinner ? "Pass" : "Fail"}
+                        className="w-12 h-12 object-contain"
+                      />
+                      <span
+                        className={`px-4 py-2 rounded font-bold text-lg ${
+                          submission.isWinner 
+                            ? "bg-green-600 dark:bg-green-500 text-white" 
+                            : "bg-red-600 dark:bg-red-500 text-white"
+                        }`}
+                      >
+                        {submission.isWinner ? "PASS" : "FAIL"}
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ marginBottom: "1rem" }}>
-                    <strong>Prompt:</strong>
-                    <p style={{ margin: "0.5rem 0", fontStyle: "italic" }}>
+                  <div className="mb-4">
+                    <strong className="text-foreground">Prompt:</strong>
+                    <p className="my-2 italic text-foreground">
                       "{submission.prompt}"
                     </p>
                   </div>
                   {submission.outcome && (
                     <div>
-                      <strong>Outcome:</strong>
-                      <p style={{ margin: "0.5rem 0" }}>{submission.outcome}</p>
+                      <strong className="text-foreground">Outcome:</strong>
+                      <p className="my-2 text-foreground">{submission.outcome}</p>
                     </div>
                   )}
                 </div>
               ))}
           </div>
 
-          <div style={{ marginTop: "2rem", marginBottom: "2rem" }}>
-            <h2>Current Scoreboard</h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          <div className="my-8">
+            <h2 className="text-foreground mb-4">Current Scoreboard</h2>
+            <div className="flex flex-col gap-2">
               {scoreboard?.map((player, idx) => (
                 <div
                   key={player.playerId}
-                  style={{
-                    padding: "1rem",
-                    backgroundColor: idx === 0 
-                      ? "var(--scoreboard-leader-bg, #fff9e6)" 
-                      : "var(--scoreboard-player-bg, #fff)",
-                    borderRadius: "4px",
-                    border: "1px solid var(--scoreboard-border, #ddd)",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    color: "var(--scoreboard-text, inherit)",
-                  }}
+                  className={`p-4 rounded border flex justify-between items-center ${
+                    idx === 0 
+                      ? "bg-primary/10 border-primary/30" 
+                      : "bg-card border-border"
+                  }`}
                 >
-                  <div>
-                    <span style={{ fontSize: "1.2rem", marginRight: "1rem" }}>
+                  <div className="flex items-center">
+                    <span className="text-xl mr-4 text-foreground">
                       #{idx + 1}
                     </span>
-                    <span>{player.name}</span>
+                    <span className="text-foreground">{player.name}</span>
                     {player.playerId === playerToken && (
-                      <span style={{ marginLeft: "0.5rem", color: "var(--scoreboard-you-text, #666)" }}>
+                      <span className="ml-2 text-muted-foreground">
                         (You)
                       </span>
                     )}
                   </div>
-                  <span style={{ fontSize: "1.2rem", fontWeight: "bold" }}>
+                  <span className="text-xl font-bold text-foreground">
                     {player.score}
                   </span>
                 </div>
@@ -501,15 +461,7 @@ export default function GameScreen({ roomId, onLeaveGame }: GameScreenProps) {
           )}
 
           {!isHost && (
-            <div
-              style={{
-                padding: "1rem",
-                backgroundColor: "var(--waiting-bg, #e8f4f8)",
-                borderRadius: "4px",
-                textAlign: "center",
-                color: "var(--waiting-text, inherit)",
-              }}
-            >
+            <div className="p-4 bg-muted rounded text-center text-muted-foreground">
               Waiting for host to start next round...
             </div>
           )}
